@@ -6,7 +6,7 @@
     "appType": "watchface",
     "version": {
       "code": 1,
-      "name": "1.1.1"
+      "name": "2.0.0"
     },
     "vender": "nimrod100",
     "description": "Color WD",
@@ -131,6 +131,18 @@
         {
           "name": "Trex3_3",
           "deviceSource": 8716547
+        },
+        {
+          "name": "Balance2_1",
+          "deviceSource": 9568512
+        },
+        {
+          "name": "Balance2_2",
+          "deviceSource": 9568513
+        },
+        {
+          "name": "Balance2_3",
+          "deviceSource": 9568515
         }
       ],
       "designWidth": 480

@@ -35,18 +35,12 @@ import {gotoSubpage} from "../../shared/navigate";
 import {Graph} from "./graph/graph";
 import {Viewport} from "./graph/viewport";
 import {Path} from "../path";
-/*
-typeof DebugText
-*/
-//var debug = null;
-/*
-typeof Watchdrip
-*/
-let watchdrip = null;
-let lastTimeValue="";
-const appId = WATCHDRIP_APP_ID;
 
-//let {minAPI,osVersion} = getApp()._options.globalData;
+let lastTimeValue="";
+let lastBGTimeValue=0;
+
+const appId = WATCHDRIP_APP_ID;
+const appIdService = 25977;
 
 function ab2str(buf) {
     return String.fromCharCode.apply(null, new Uint8Array(buf));
@@ -67,7 +61,7 @@ export class WatchdripV3 {
         this.screenType = hmSetting.getScreenType();
 
         this.globalNS = getGlobal();
-        //debug = this.globalNS.debug;
+
         this.timeSensor = hmSensor.createSensor(hmSensor.id.TIME);
         this.watchdripData = new WatchdripData(this.timeSensor);
 
@@ -83,15 +77,12 @@ export class WatchdripV3 {
 		this.lastGraphDraw=this.timeSensor.utc-10000;
         this.infoFile = new Path("full", WF_INFO_FILE);  
         this.refreshGraph=true;  
-        /*
-        typeof Graph
-        */
-        this.graph = null;//new Graph(0, 0, 0, 0);
+
+        this.graph = null;
     }
 
     //call before any usage of the class instance
     prepare() {
-        watchdrip = this.globalNS.watchdrip;
     }
 
     deactivateGraphRefresh()
@@ -107,7 +98,6 @@ export class WatchdripV3 {
 		
 		this.nextUpdateTime=this.timeSensor.utc - 10000;
 		
-		//this.updateLog("API "+minApi+ ", OS "+osVersion);
         //Monitor watchface activity in order to recreate connection
         if (this.isAOD()) {
 			if(this.readValueInfo())
@@ -126,7 +116,18 @@ export class WatchdripV3 {
                 resume_call: () => {
 					if(this.readValueInfo())
 					{
-						this.updateWidgets();
+                        let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                        if(lastBGTimeValue!==this.watchdripData.getBg().time)
+                        {
+		                    this.updateWidgets();
+				            lastTimeValue=actualValue;
+                            lastBGTimeValue=this.watchdripData.getBg().time;
+                        }
+			            else if(lastTimeValue!=actualValue)
+			            {
+				            this.updateTimesWidget();
+				            lastTimeValue=actualValue;
+                        }
 					}
 					if(this.intervalTimerForce === null)
 					{
@@ -186,8 +187,6 @@ export class WatchdripV3 {
 
     /*Callback which is called  when watchface deactivating (not visible)*/
     widgetDelegateCallbackPauseCall() {
-        //debug.log("pause_call");
-        //this.stopDataUpdates();
         this.resumeCall = false;
         this.updatingData = false;
         this.updateFinish();
@@ -214,7 +213,6 @@ export class WatchdripV3 {
     }
 
     updateWidgets() {
-        //debug.log("updateWidgets");
         this.updateValuesWidget()
         this.updateTimesWidget()
     }
@@ -274,7 +272,6 @@ export class WatchdripV3 {
 
         let graphInfo = this.watchdripData.getGraph();
         if (graphInfo.start === "") {
-            //this.graph.clear();
             return;
         }
 		this.lastGraphDraw=this.watchdripData.getBg().time;
@@ -297,13 +294,36 @@ export class WatchdripV3 {
             }
         });
 
-        //debug.log("Lines count : " + Object.keys(lines).length);
         this.graph.setLines(lines);
         this.graph.draw();
     }
 
     isAppFetch() {
         return this.watchdripConfig.useAppFetch === true;
+    }
+
+    isServiceStarted() {
+        const file_name_running = "serviceStarted.status";
+        const file_name= "info.json"
+        try {
+
+            const [fs_stat, err] = hmFS.stat(file_name_running, {
+                appid: appIdService
+            })
+            if (err == 0) {
+                const [fs_stat2, err2] = hmFS.stat(file_name, {
+                    appid: appIdService
+                })
+                if (err2 == 0) {
+                    return true;
+                }
+            }
+            else
+                return false;
+        } catch (error) {
+            return false;
+        }
+        return false;
     }
 
     resetLastUpdate() {
@@ -329,32 +349,82 @@ export class WatchdripV3 {
 		if(this.updatingData)
 			return;
 		this.lastUpdateAttempt = this.timeSensor.utc;
-		let nextTime=this.readControl();
-		if(nextTime>0 && nextTime>this.nextUpdateTime+" AOD "+this.isAOD())
-			this.nextUpdateTime=nextTime;
 
-        if(this.nextUpdateTime<=this.timeSensor.utc)
-		{
-			this.resetLastUpdate();
-			this.updatingData = true;
-            this.nextUpdateTime=this.timeSensor.utc+10000;
-            this.saveControl(this.nextUpdateTime);
-	        hmApp.startApp({ appid: WATCHDRIP_APP_ID, url: 'page/index', param: 'update_local' });				
-            this.nextUpdateTime=this.timeSensor.utc+10000;
-            this.saveControl(this.nextUpdateTime);
-            this.readValueInfo();
-            this.updateWidgets();
-			this.updatingData = false;
-		}
-		else
-		{
-			let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
-			if(lastTimeValue!=actualValue)
-			{
-				this.updateTimesWidget();
-				lastTimeValue=actualValue;
-			}			
-		}
+        if(this.isServiceStarted())
+        {
+            if(this.nextUpdateTime<=this.timeSensor.utc)
+            {
+                this.resetLastUpdate();
+                this.updatingData = true;
+                this.readValueInfo();
+                let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                if(lastBGTimeValue!==this.watchdripData.getBg().time)
+                {
+                    this.updateWidgets();
+		            lastTimeValue=actualValue;
+                    lastBGTimeValue=this.watchdripData.getBg().time;
+                }
+	            else if(lastTimeValue!=actualValue)
+	            {
+		            this.updateTimesWidget();
+		            lastTimeValue=actualValue;
+                }
+//                this.updateWidgets();
+                this.updatingData = false;
+            }
+            else
+            {
+                this.firstRun = false;
+                let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                if(lastTimeValue!=actualValue)
+                {
+                    this.updateTimesWidget();
+                    lastTimeValue=actualValue;
+                }			
+            }
+        }
+        else
+        {
+            let nextTime=this.readControl();
+            if(nextTime>0 && nextTime>this.nextUpdateTime+" AOD "+this.isAOD())
+                this.nextUpdateTime=nextTime;
+
+            if(this.nextUpdateTime<=this.timeSensor.utc)
+            {
+                this.resetLastUpdate();
+                this.updatingData = true;
+                this.nextUpdateTime=this.timeSensor.utc+10000;
+                this.saveControl(this.nextUpdateTime);
+                hmApp.startApp({ appid: WATCHDRIP_APP_ID, url: 'page/index', param: 'update_local' });				
+                this.nextUpdateTime=this.timeSensor.utc+10000;
+                this.saveControl(this.nextUpdateTime);
+                this.readValueInfo();
+
+                let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                if(lastBGTimeValue!==this.watchdripData.getBg().time)
+                {
+                    this.updateWidgets();
+		            lastTimeValue=actualValue;
+                    lastBGTimeValue=this.watchdripData.getBg().time;
+                }
+	            else if(lastTimeValue!=actualValue)
+	            {
+		            this.updateTimesWidget();
+		            lastTimeValue=actualValue;
+                }
+
+                this.updatingData = false;
+            }
+            else
+            {
+                let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                if(lastTimeValue!=actualValue)
+                {
+                    this.updateTimesWidget();
+                    lastTimeValue=actualValue;
+                }			
+            }
+        }
 	}
 
     readControl() {
@@ -402,70 +472,119 @@ export class WatchdripV3 {
 	
     readValueInfo() {
 
-        //const mini_app_id = 28962;
-        const file_name = "info.json";
-        let info = "";
-        let salir=false;
-  
-		try {
-			const fh = hmFS.open(file_name, hmFS.O_RDONLY, {
-				appid: appId
-			});
-
-			while(!salir)
-			{
-				const len = 512;
-				let array_buffer = new ArrayBuffer(len);
-				hmFS.read(fh, array_buffer, 0, len);
-				info+=ab2str(array_buffer);
-				var bufView = new Uint8Array(array_buffer)
-				if(bufView[511]==0)
-				{
-					salir=true;
-				}
-			}
-			hmFS.close(fh);
-		} catch (error) {
-			//this.updateLog("ERROR "+error);
-			info = "";
-		}
-        let data = {};
-        if(info!==null && info!=undefined && info)
+        if(this.isServiceStarted())
         {
+            const file_name = "info.json";
+            let info = "";
+            let salir=false;
+      
+            try {
+                const fh = hmFS.open(file_name, hmFS.O_RDONLY, {
+                    appid: appIdService
+                })
+    
+                while(!salir)
+                {
+                    const len = 512;
+                    let array_buffer = new ArrayBuffer(len);
+                    hmFS.read(fh, array_buffer, 0, len);
+                    info+=ab2str(array_buffer);
+                    var bufView = new Uint8Array(array_buffer)
+                    if(bufView[511]==0)
+                    {
+                        salir=true;
+                    }
+                }
+                hmFS.close(fh);
+            } catch (error) {
+                info = "";
+            }
             info=info.replace(/\0/g, '');
-            data=JSON.parse(info)
+
+            if(info!==null && info!=undefined)
+            {
+                if (info) {
+                    let data = {};
+                    try {
+                        data = str2json(info);
+                        this.watchdripData.setData(data); 
+                        this.watchdripData.timeDiff = 0;
+                        this.nextUpdateTime=this.watchdripData.getBg().time+65000;
+                        info = null;
+                    } catch (e) {
+                        info = null;
+                        return false;
+                    }
+                    data = null;
+                    return true
+                }
+            }
         }
         else
-            data = this.infoFile.fetchJSON();
-        if (data) 
-        {
-		    try {
-		        let oldTime=this.watchdripData.getBg().time;
-			    this.watchdripData.setData(data); 
-			    this.watchdripData.timeDiff = 0;
-			    this.nextUpdateTime=this.watchdripData.getBg().time+305000;
-                if(this.nextUpdateTime<=this.timeSensor.utc)
+        {        
+            const file_name = "info.json";
+            let info = "";
+            let salir=false;
+    
+            try {
+                const fh = hmFS.open(file_name, hmFS.O_RDONLY, {
+                    appid: appId
+                });
+
+                while(!salir)
                 {
-                    let nextTime=this.readControl();
-                    if(nextTime===0)
+                    const len = 512;
+                    let array_buffer = new ArrayBuffer(len);
+                    hmFS.read(fh, array_buffer, 0, len);
+                    info+=ab2str(array_buffer);
+                    var bufView = new Uint8Array(array_buffer)
+                    if(bufView[511]==0)
+                    {
+                        salir=true;
+                    }
+                }
+                hmFS.close(fh);
+            } catch (error) {
+                info = "";
+            }
+            let data = {};
+            if(info!==null && info!=undefined && info)
+            {
+                info=info.replace(/\0/g, '');
+                data=JSON.parse(info)
+            }
+            else
+                data = this.infoFile.fetchJSON();
+            if (data) 
+            {
+                try {
+                    let oldTime=this.watchdripData.getBg().time;
+                    this.watchdripData.setData(data); 
+                    this.watchdripData.timeDiff = 0;
+                    this.nextUpdateTime=this.watchdripData.getBg().time+305000;
+                    if(this.nextUpdateTime<=this.timeSensor.utc)
+                    {
+                        let nextTime=this.readControl();
+                        if(nextTime===0)
+                        {
+                            this.saveControl(this.nextUpdateTime);
+                        }
+                        else if(this.nextUpdateTime<nextTime)
+                        {
+                            this.nextUpdateTime=nextTime;
+                        }
+                    }
+                    else
                     {
                         this.saveControl(this.nextUpdateTime);
                     }
-                    else if(this.nextUpdateTime<nextTime)
-                    {
-                        this.nextUpdateTime=nextTime;
-                    }
+                } catch (e) {
+                    //this.updateLog("readValueInfo error:" + e);
                 }
-                else
-                {
-                    this.saveControl(this.nextUpdateTime);
-                }
-			} catch (e) {
-			    //this.updateLog("readValueInfo error:" + e);
-		    }
-		    data = null;
-		    return true
-	    }
+                data = null;
+                return true
+            }
+        }
         return false;
     }
 
