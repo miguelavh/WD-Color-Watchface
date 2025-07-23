@@ -295,6 +295,18 @@
 	      {          
           "name": "bip6-3",
           "deviceSource": 10158337
+        },
+	      {          
+          "name": "active2sq-1",
+          "deviceSource": 9830656
+        },
+	      {          
+          "name": "active2sq-2",
+          "deviceSource": 9830657
+        },
+	      {          
+          "name": "active2sq-3",
+          "deviceSource": 9830659
         }
       ],
       "designWidth": 390
