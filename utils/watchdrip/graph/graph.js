@@ -4,7 +4,7 @@ typeof DebugText
 */
 //let debug = null;
 export class Graph {
-    constructor(x, y, width, height) {
+    constructor(x, y, width, height, isAOD) {
         this.x = x;
         this.y = y;
         this.height = height;
@@ -14,6 +14,7 @@ export class Graph {
         this.widgets = [];
         this.globalNS = getGlobal();
         this.visibility = true;
+        this.isAOD = isAOD;
         //debug = this.globalNS.debug;
     }
 
@@ -27,6 +28,13 @@ export class Graph {
 
     setViewport(viewport) {
         this.viewport = viewport;
+    }
+
+    darkenColor(color, amount = 0x20) {
+        const r = Math.max(0, ((color >> 16) & 0xFF) - amount);
+        const g = Math.max(0, ((color >> 8) & 0xFF) - amount);
+        const b = Math.max(0, (color & 0xFF) - amount);
+        return (r << 16) | (g << 8) | b;
     }
 
     draw() {
@@ -94,8 +102,15 @@ export class Graph {
 
     createWidget(x, y, pointStyle) {
         let widget;
+        let visibility=hmUI.show_level.ONLY_NORMAL;
+        if(this.isAOD){
+            visibility=hmUI.show_level.ONAL_AOD;
+        }
         if (pointStyle.imageFile === "") {
             let color = parseInt(pointStyle.color, 16);
+            if (this.isAOD) {
+                color = this.darkenColor(color, 0x20);
+            }
             widget = hmUI.createWidget(hmUI.widget.FILL_RECT, {
                 x: x,
                 y: y,
@@ -103,14 +118,14 @@ export class Graph {
                 h: pointStyle.height,
                 radius: pointStyle.radius,
                 color: color,
-                show_level: hmUI.show_level.ONLY_NORMAL,
+                show_level: visibility,
             })
         } else {
             widget = hmUI.createWidget(hmUI.widget.IMG, {
                 x: x,
                 y: y,
                 src: pointStyle.imageFile,
-                show_level: hmUI.show_level.ONLY_NORMAL,
+                show_level: visibility,
             })
         }
         this.widgets.push(widget);

@@ -2,7 +2,7 @@ import {TEST_DATA} from "../../config/constants";
 import {MINUTE_IN_MS} from "../../../shared/date";
 
 export class BgData {
-    constructor(val, delta, trend, isHigh, isLow, time, isStale) {
+    constructor(val, delta, trend, isHigh, isLow, time, isStale, tir, tirHigh, tirLow) {
         this.val = val;
         this.delta = delta;
         this.trend = trend;
@@ -10,6 +10,9 @@ export class BgData {
         this.isLow = isLow;
         this.time = time;
         this.isStale = isStale;
+        this.tir = tir;
+        this.tirHigh = tirHigh;
+        this.tirLow = tirLow;
     }
 
     getBGVal() {
@@ -25,9 +28,9 @@ export class BgData {
 
     static createEmpty() {
         if (TEST_DATA){
-            return new BgData("10.5", "+13.2", "Flat", true, false, Date.now()-2*MINUTE_IN_MS, false);
+            return new BgData("10.5", "+13.2", "Flat", true, false, Date.now()-2*MINUTE_IN_MS, false,"100","0","0");
         }
-        return new BgData("", "", "", false, false, null, true);
+        return new BgData("", "", "", false, false, null, true, null, null, null);
     }
 
     getArrowText() {

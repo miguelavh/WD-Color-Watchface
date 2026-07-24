@@ -25,13 +25,13 @@ export const PROGRESS_UPDATE_INTERVAL_MS = 100;
 export const PROGRESS_ANGLE_INC = 30;
 
 export const Colors = {
-    default:0xfc6950,
-    defaultTransparent:0xababab,
-    white:0xffffff,
-    black:0x000000,
-    bgHigh:0xffa0a0,
-    bgLow:0x8bbbff,
-    accent:0xffbeff37,
+  default:0x333333,
+  defaultTransparent:0x059AF7,
+  white:0xffffff,
+  black:0x000000,
+  bgHigh:0xfdef03,
+  bgLow:0xfd030f,
+  accent:0xffbeff37,
 };
 
 /*set to true on wf creation*/

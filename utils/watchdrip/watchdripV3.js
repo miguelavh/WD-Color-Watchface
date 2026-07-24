@@ -252,14 +252,14 @@ export class WatchdripV3 {
     }
 
     createGraph(x, y, width, height, lineStyles) {
-        this.graph = new Graph(x, y, width, height);
+        this.graph = new Graph(x, y, width, height,this.isAOD());
         this.graphLineStyles = lineStyles;
     }
 
     //draw graph only on normal display
     //the aod mode is glitchy
     drawGraph() {
-        if (this.graph === null || this.isAOD()) {
+        if (this.graph === null){// || this.isAOD()) {
             return;
         }
         if (!this.graph.visibility) {
