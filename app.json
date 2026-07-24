@@ -143,6 +143,86 @@
         {
           "name": "Balance2_3",
           "deviceSource": 9568515
+        },
+        {          
+          "name": "balance2xt-1",
+          "deviceSource": 10486019
+        },
+        {          
+          "name": "balance2xt-2",
+          "deviceSource": 10486017
+        },
+        {          
+          "name": "balance2xt-3",
+          "deviceSource": 10486016
+        },
+        {
+          "name": "Trex3pro48_1",
+          "deviceSource": 10551555
+        },
+        {
+          "name": "Trex3pro48_2",
+          "deviceSource": 10551553
+        },
+        {
+          "name": "Trex3pro48_3",
+          "deviceSource": 10551552
+        },
+        {
+          "name": "ActiveMax_1",
+          "deviceSource": 10813699
+        },
+        {
+          "name": "ActiveMax_2",
+          "deviceSource": 10813697
+        },
+        {
+          "name": "TRex_Ultra2_1",
+          "deviceSource": 10879233
+        },
+        {
+          "name": "TRex_Ultra2_2",
+          "deviceSource": 10879232
+        },
+        {
+          "name": "TRex_Ultra2_3",
+          "deviceSource": 10879235
+        },
+        {
+          "name": "cheetah2_ultra1",
+          "deviceSource": 9978112
+        },
+        {
+          "name": "cheetah2_ultra2",
+          "deviceSource": 9978113
+        },
+        {
+          "name": "balance3_1",
+          "deviceSource": 11141379
+        },
+        {
+          "name": "balance3_2",
+          "deviceSource": 11141377
+        },
+        {
+          "name": "balance3_3",
+          "deviceSource": 11141376
+        },
+        {
+          "name": "balance_ultra_1",
+          "deviceSource": 11092225
+        },
+        {
+          "name": "balance_ultra_2",
+          "deviceSource": 11092224
+        },
+        {
+          "name": "balance_ultra_3",
+          "deviceSource": 11075841
+        },
+        {
+          "name": "balance_ultra_4",
+          "deviceSource": 11075840
         }
       ],
       "designWidth": 480
@@ -203,6 +283,46 @@
         {
           "name": "active-2-8",
           "deviceSource": 10092807
+        },
+        {
+          "name": "Trex3pro44_1",
+          "deviceSource": 10682625
+        },
+        {
+          "name": "Trex3pro44_2",
+          "deviceSource": 10682627
+        },
+        {
+          "name": "Trex3pro44_3",
+          "deviceSource": 10682624
+        },
+        {
+          "name": "Active3premium_1",
+          "deviceSource": 10948867
+        },
+        {
+          "name": "Active3premium_2",
+          "deviceSource": 10944771
+        },
+        {
+          "name": "Active3premium_3",
+          "deviceSource": 10944769
+        },
+        {
+          "name": "Active3premium_4",
+          "deviceSource": 10944768
+        },
+        {
+          "name": "cheetah2_pro1",
+          "deviceSource": 11010307
+        },
+        {
+          "name": "cheetah2_pro2",
+          "deviceSource": 11010305
+        },
+        {
+          "name": "cheetah2_pro3",
+          "deviceSource": 11010304
         }
       ],
       "designWidth": 466
@@ -307,6 +427,18 @@
 	      {          
           "name": "active2sq-3",
           "deviceSource": 9830659
+        },
+	      {          
+          "name": "active2sq-4",
+          "deviceSource": 10223872
+        },
+	      {          
+          "name": "active2sq-5",
+          "deviceSource": 10223873
+        },
+	      {          
+          "name": "active2sq-6",
+          "deviceSource": 10223875
         }
       ],
       "designWidth": 390
@@ -398,6 +530,26 @@
         }
       ],
       "designWidth": 194
+    },
+    "rect432": {
+      "module": {
+        "watchface": {
+          "path": "watchface/entry/rect432/index",
+          "main": 1,
+          "editable": 1,
+          "lockscreen": 1
+        },
+        "app-side": {
+          "path": "app-side/index"
+        }
+      },
+      "platforms": [
+        {
+          "name": "bipMax",
+          "deviceSource": 11206915
+        }
+      ],
+      "designWidth": 432
     }    
   },
   "i18n": {
