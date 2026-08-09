@@ -359,7 +359,7 @@ export class WatchdripV3 {
         else
         {
             let nextTime=this.readControl();
-            if(nextTime>0 && nextTime>this.nextUpdateTime+" AOD "+this.isAOD())
+            if(nextTime>0 && nextTime>this.nextUpdateTime)
                 this.nextUpdateTime=nextTime;
 
             if(this.nextUpdateTime<=this.timeSensor.utc)
