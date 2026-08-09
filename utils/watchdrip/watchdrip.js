@@ -2,9 +2,6 @@ import {getGlobal} from "../../shared/global";
 import {
     WATCHDRIP_ALARM_CONFIG_DEFAULTS,
     WATCHDRIP_APP_ID,
-    WATCHDRIP_CONFIG,
-    WATCHDRIP_CONFIG_DEFAULTS,
-    WATCHDRIP_CONFIG_LAST_UPDATE,
     WF_INFO,
     WF_INFO_DIR_LOCAL,
     WF_INFO_FILE_LOCAL,
@@ -34,15 +31,7 @@ import {gotoSubpage} from "../../shared/navigate";
 import {Graph} from "./graph/graph";
 import {Viewport} from "./graph/viewport";
 
-//let {messageBuilder} = getApp()._options.globalData;
 
-/*
-typeof DebugText
-*/
-//var debug = null;
-/*
-typeof Watchdrip
-*/
 let watchdrip = null;
 let lastTimeValue="";
 const appId = WATCHDRIP_APP_ID;
@@ -53,7 +42,6 @@ export class Watchdrip {
         this.screenType = hmSetting.getScreenType();
 
         this.globalNS = getGlobal();
-        //debug = this.globalNS.debug;
         this.timeSensor = hmSensor.createSensor(hmSensor.id.TIME);
         this.watchdripData = new WatchdripData(this.timeSensor);
 
@@ -65,19 +53,14 @@ export class Watchdrip {
         this.intervalTimer = null;
         this.firstRun = true;
         this.resumeCall = false;
-		//this.connectionActive = false;
 		this.intervalTimerForce = null;
-		//this.intervalTimerWatchdog = null;
 		this.nextUpdateTime= null;
 		this.messageBuilder=null;
 		this.connected=false;
-		//this.lastWatchdog=null;
 		this.lastGraphDraw=this.timeSensor.utc-10000;
         this.refreshGraph=true;  
-        /*
-        typeof Graph
-        */
-        this.graph = null;//new Graph(0, 0, 0, 0);
+
+        this.graph = null;
     }
 
     //call before any usage of the class instance
@@ -93,30 +76,10 @@ export class Watchdrip {
     start() {
         this.checkConfigUpdate();
         this.createWatchdripDir();
-        this.updateIntervals = this.getUpdateInterval();
-/*        if(this.readInfo())
-		{
-			this.updateWidgets();
-		}
-		else
-		{
-			this.forceFetchInfo();
-		}*/
 
-/*        if (this.intervalTimerForce != null) //already started
-		{
-			this.globalNS.clearInterval(this.intervalTimerForce);
-			this.intervalTimerForce = null;
-		}*/
 		this.updatingData = false;
 		
-		//this.nextUpdateTime=this.watchdripData.getBg().time + 30000;
 		this.nextUpdateTime=this.timeSensor.utc - 10000;
-		
-/*        this.intervalTimerForce = this.globalNS.setInterval(() => {
-            this.forceFetchInfo();			
-        }, 1000);*/
-		
 		
         //Monitor watchface activity in order to recreate connection
         if (this.isAOD()) {
@@ -136,18 +99,6 @@ export class Watchdrip {
 				}, 5000);
 			}
         } else {
-			/*if(this.intervalTimerWatchdog!=null) return;
-			{
-				this.globalNS.clearInterval(this.intervalTimerWatchdog);
-				this.intervalTimerWatchdog = null;
-			}*/
-
-			//this.lastWatchdog=this.timeSensor.utc;
- 
-			/*this.intervalTimerWatchdog = this.globalNS.setInterval(() => {
-				this.watchdog();			
-			}, 5000);*/
-
             hmUI.createWidget(hmUI.widget.WIDGET_DELEGATE, {
                 resume_call: () => {
 					console.log("RESUME");
@@ -163,12 +114,8 @@ export class Watchdrip {
 					{
 						this.forceFetchInfo();
 					}
-					/*if (this.intervalTimerForce != null) //already started
-					{
-						this.globalNS.clearInterval(this.intervalTimerForce);
-						this.intervalTimerForce = null;
-					}*/
-					if(this.intervalTimerForce === null)
+
+                    if(this.intervalTimerForce === null)
 					{
 						this.updatingData = false;
 						this.intervalTimerForce = this.globalNS.setInterval(() => {
@@ -176,26 +123,6 @@ export class Watchdrip {
 						}, 1000);
 					}
 					console.log("UPDATE");
-					
-					/*if(this.lastWatchdog===null)
-						this.lastWatchdog=this.timeSensor.utc-30005;
-					console.log("lastWatchdog "+this.lastWatchdog);
-					console.log("isTimeout(lastWatchdog,30000) "+this.isTimeout(this.lastWatchdog,30000));
-					if(this.lastWatchdog!=null && this.isTimeout(this.lastWatchdog,30000))
-					{
-						debug.log("cumple WD");
-						if(this.intervalTimerWatchdog!==null)
-						{
-							this.globalNS.clearInterval(this.intervalTimerWatchdog);
-							this.intervalTimerWatchdog = null;
-						}
-						this.intervalTimerWatchdog = this.globalNS.setInterval(() => {
-							this.watchdog();			
-						}, 5000);
-					}*/
-					//console.log("HILOS");
-                    //this.widgetDelegateCallbackResumeCall();
-					console.log("CALLBACK");
                 },
                 pause_call: () => {
 					if (this.intervalTimerForce != null) //already started
@@ -209,28 +136,6 @@ export class Watchdrip {
         }
     }
 
-    getUpdateInterval() {
-        let interval = DATA_UPDATE_INTERVAL_MS;
-        if (this.isAOD()) {
-            interval = DATA_AOD_UPDATE_INTERVAL_MS;
-        } else if (this.isAppFetch()) {
-            interval = APP_FETCH_UPDATE_INTERVAL_MS
-        }
-		
-        return interval;
-    }
-
-    getTimerUpdateInterval() {
-        let interval = DATA_TIMER_UPDATE_INTERVAL_MS;
-        if (this.isAppFetch()) {
-            interval = APP_FETCH_TIMER_UPDATE_INTERVAL_MS
-        } else if (this.isAOD()) {
-            interval = DATA_AOD_TIMER_UPDATE_INTERVAL_MS;
-        }
-        return interval;
-    }
-
-
     isAOD() {
         return this.screenType === hmSetting.screen_type.AOD;
     }
@@ -242,22 +147,8 @@ export class Watchdrip {
         return this.timeSensor.utc - time > timeout_ms;
     }
 
-    readLastUpdate() {
-        let lastInfoUpdate = hmFS.SysProGetInt64(WF_INFO_LAST_UPDATE);
-        this.lastUpdateAttempt = hmFS.SysProGetInt64(WF_INFO_LAST_UPDATE_ATTEMPT);
-        this.lastUpdateSucessful = hmFS.SysProGetBool(WF_INFO_LAST_UPDATE_SUCCESS);
-		
-        return lastInfoUpdate;
-    }
-
     //connect watch with side app
     initConnection() {
-        //if (this.connectionActive) {
-        //    return;
-        //}
-        //debug.log("initConnection");
-        //this.connectionActive = true;
-        
         //we need to recreate connection to force start side app
 		if(this.messageBuilder===null)
 		{
@@ -271,22 +162,15 @@ export class Watchdrip {
     }
 
     dropConnection() {
-        //if (!this.connectionActive) {
-        //    return;
-        //}
-        //debug.log("dropConnection");
 		if(this.messageBuilder!==null)
 		{
 			this.messageBuilder.disConnect();
 		}
 		this.connected=false;
-        //this.connectionActive = false;
     }
 
     /*Callback which is called  when watchface deactivating (not visible)*/
     widgetDelegateCallbackPauseCall() {
-        //debug.log("pause_call");
-        //this.stopDataUpdates();
         this.resumeCall = false;
         this.updatingData = false;
         this.updateFinish();
@@ -310,7 +194,6 @@ export class Watchdrip {
     }
 
     updateWidgets() {
-        //debug.log("updateWidgets");
         this.updateValuesWidget()
         this.updateTimesWidget()
     }
@@ -349,11 +232,11 @@ export class Watchdrip {
     }
 
     //draw graph only on normal display
-    //the aod mode is glitchy
     drawGraph() {
-        if (this.graph === null){// || this.isAOD()) {
+        if (this.graph === null){
             return;
         }
+
         if (!this.graph.visibility) {
             this.graph.clear();
             return;
@@ -364,11 +247,10 @@ export class Watchdrip {
 
         let graphInfo = this.watchdripData.getGraph();
         if (graphInfo.start === "") {
-            //this.graph.clear();
             return;
         }
 		this.lastGraphDraw=this.watchdripData.getBg().time;
-        //debug.log("draw graph");
+
         let viewportTop = this.watchdripData.getStatus().isMgdl ? GRAPH_LIMIT * MMOLL_TO_MGDL : GRAPH_LIMIT;
         this.graph.setViewport(new Viewport(graphInfo.start, graphInfo.end, 0, viewportTop));
         let lines = {};
@@ -387,7 +269,6 @@ export class Watchdrip {
             }
         });
 
-        //debug.log("Lines count : " + Object.keys(lines).length);
         this.graph.setLines(lines);
         this.graph.draw();
     }
@@ -452,8 +333,6 @@ export class Watchdrip {
 					let {result: info = {}} = data;
 					try {
 						if (data===null || data===undefined || info.error) {
-							//debug.log("Error");
-							//debug.log(info);
 							this.dropConnection();
 							this.updateFinish();					
 							this.updateWidgets();
@@ -461,7 +340,6 @@ export class Watchdrip {
 							this.updatingData = false;
 							return;
 						}
-						//debug.log(info);
 						this.lastInfoUpdate = this.saveInfo(info);
 						let dataInfo = str2json(info);
 						info = null;
@@ -469,12 +347,12 @@ export class Watchdrip {
 						this.watchdripData.updateTimeDiff();
 						dataInfo = null;
 					} catch (e) {
-						//debug.log("fetchInfo error:" + e);
+						debug.log("fetchInfo error:" + e);
 						info = null;
 					}
 				})
 				.catch((error) => {
-					//debug.log("fetch error:" + error);
+					debug.log("fetch error:" + error);
 				})
 				.finally(() => {
 					try
@@ -513,12 +391,10 @@ export class Watchdrip {
 	}
 
     createWatchdripDir() {
-        if (USE_FILE_INFO_STORAGE) {// && !this.isAOD()) {
+        if (USE_FILE_INFO_STORAGE) {
             if (!fs.statSync(WF_INFO_DIR_LOCAL)) {
                 fs.mkdirSync(WF_INFO_DIR_LOCAL);
             }
-            // const [fileNameArr] = hmFS.readdir("/storage");
-            // debug.log(fileNameArr);
         }
     }
 
@@ -585,19 +461,14 @@ export class Watchdrip {
     checkConfigUpdate() {
         let configLastUpdate = hmFS.SysProGetInt64(WATCHDRIP_CONFIG_LAST_UPDATE);
         if (this.configLastUpdate !== configLastUpdate) {
-            //debug.log("detected config change");
             this.configLastUpdate = configLastUpdate;
             this.readConfig();
-            //debug.setEnabled(this.watchdripConfig.showLog);
-            //restart timer (the fetch mode can be changed)
-            //this.stopDataUpdates();
             return true;
         }
         return false
     }
 
     destroy() {
-        //this.stopDataUpdates();
         if (this.intervalTimerForce != null) {
             //debug.log("stopDataUpdates");
             this.globalNS.clearInterval(this.intervalTimerForce);
@@ -610,48 +481,11 @@ export class Watchdrip {
 			this.messageBuilder=null;
 		}
 
-        /*if (this.intervalTimerWatchdog !== null) {
-            //debug.log("stopDataUpdates");
-            this.globalNS.clearInterval(this.intervalTimerWatchdog);
-            this.intervalTimerWatchdog = null;
-        }*/
 		this.watchdripData=null;
-/*		if(this.graph!=null)
-		{
-			this.graph.clear();
-			this.graphLineStyles['treatment']=null;
-			this.graphLineStyles['lineLow'] = null;
-			this.graphLineStyles['lineHigh'] = null;
-			this.graphLineStyles['predict'] = null;
-			this.graphLineStyles['high'] = null;
-			this.graphLineStyles['low'] = null;
-			this.graphLineStyles['inRange'] = null;
-			this.graphLineStyles=null;
-		}*/
+        if (this.graph !== null){
+            this.graph.clear();
+        }
 		this.graph=null;
     }
-	
-/*	watchdog() {
-		try
-		{
-			this.lastWatchdog=this.timeSensor.utc;
-			//if(intervalTimerForce!=null && this.updatingData && this.timeSensor.utc<=(this.lastUpdateAttempt+30000))
-				
-			if(this.isTimeout(this.lastUpdateAttempt,30000))
-			{
-				if(this.intervalTimerForce!=null)
-				{
-					this.globalNS.clearInterval(this.intervalTimerForce);
-					this.intervalTimerForce = null;
-				}
-				this.updatingData = false;
-				this.intervalTimerForce = this.globalNS.setInterval(() => {
-					this.forceFetchInfo();			
-				}, 1000);
-			}
-		}catch(e)
-		{
-		}
-	}*/
 	
 }
