@@ -103,6 +103,22 @@ export class WatchdripV3 {
 				            lastTimeValue=actualValue;
                         }
 					}
+                    else
+                    {
+                        try
+                        {
+                            let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                            if(lastTimeValue!=actualValue)
+                            {
+                                this.updateTimesWidget();
+                                lastTimeValue=actualValue;
+                            }                
+                        }
+                        catch(e)
+                        {
+                        }
+                    }
+
 					if(this.intervalTimerForce === null)
 					{
                         this.updatingData = false;
@@ -268,12 +284,18 @@ export class WatchdripV3 {
 		
 		if(!hmBle.connectStatus())
 		{
-			let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
-			if(lastTimeValue!=actualValue)
-			{
-				this.updateTimesWidget();
-				lastTimeValue=actualValue;
-			}			
+            try
+            {
+                let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                if(lastTimeValue!=actualValue)
+                {
+                    this.updateTimesWidget();
+                    lastTimeValue=actualValue;
+                }			
+            }
+            catch(e)
+            {
+            }
 			return;
 		}
 		
@@ -286,30 +308,52 @@ export class WatchdripV3 {
             {
                 this.resetLastUpdate();
                 this.updatingData = true;
-                this.readValueInfo();
-                let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
-                if(lastBGTimeValue!==this.watchdripData.getBg().time)
-                {
-                    this.updateWidgets();
-		            lastTimeValue=actualValue;
-                    lastBGTimeValue=this.watchdripData.getBg().time;
+				if(this.readValueInfo())
+				{
+                    let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                    if(lastBGTimeValue!==this.watchdripData.getBg().time)
+                    {
+                        this.updateWidgets();
+                        lastTimeValue=actualValue;
+                        lastBGTimeValue=this.watchdripData.getBg().time;
+                    }
+                    else if(lastTimeValue!=actualValue)
+                    {
+                        this.updateTimesWidget();
+                        lastTimeValue=actualValue;
+                    }
                 }
-	            else if(lastTimeValue!=actualValue)
-	            {
-		            this.updateTimesWidget();
-		            lastTimeValue=actualValue;
+                else
+                {
+                    try
+                    {
+                        let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                        if(lastTimeValue!=actualValue)
+                        {
+                            this.updateTimesWidget();
+                            lastTimeValue=actualValue;
+                        }                
+                    }catch(e)
+                    {
+
+                    }
                 }
                 this.updatingData = false;
             }
             else
             {
                 this.firstRun = false;
-                let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
-                if(lastTimeValue!=actualValue)
+                try
                 {
-                    this.updateTimesWidget();
-                    lastTimeValue=actualValue;
-                }			
+                    let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                    if(lastTimeValue!=actualValue)
+                    {
+                        this.updateTimesWidget();
+                        lastTimeValue=actualValue;
+                    }			
+                }catch(e)
+                {
+                }
             }
         }
         else
@@ -327,31 +371,51 @@ export class WatchdripV3 {
                 hmApp.startApp({ appid: WATCHDRIP_APP_ID, url: 'page/index', param: 'update_local' });				
                 this.nextUpdateTime=this.timeSensor.utc+10000;
                 this.saveControl(this.nextUpdateTime);
-                this.readValueInfo();
-
-                let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
-                if(lastBGTimeValue!==this.watchdripData.getBg().time)
+				if(this.readValueInfo())
+				{
+                    let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                    if(lastBGTimeValue!==this.watchdripData.getBg().time)
+                    {
+                        this.updateWidgets();
+		                lastTimeValue=actualValue;
+                        lastBGTimeValue=this.watchdripData.getBg().time;
+                    }
+	                else if(lastTimeValue!=actualValue)
+	                {
+		                this.updateTimesWidget();
+		                lastTimeValue=actualValue;
+                    }
+                }
+                else 
                 {
-                    this.updateWidgets();
-		            lastTimeValue=actualValue;
-                    lastBGTimeValue=this.watchdripData.getBg().time;
-                }
-	            else if(lastTimeValue!=actualValue)
-	            {
-		            this.updateTimesWidget();
-		            lastTimeValue=actualValue;
-                }
+                    try
+                    {
+                        let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                        if(lastTimeValue!=actualValue)
+                        {
+		                    this.updateTimesWidget();
+		                    lastTimeValue=actualValue;
+                        }
+                    }catch(e)
+                    {
 
+                    }
+                }
                 this.updatingData = false;
             }
             else
             {
-                let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
-                if(lastTimeValue!=actualValue)
+                try
                 {
-                    this.updateTimesWidget();
-                    lastTimeValue=actualValue;
-                }			
+                    let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
+                    if(lastTimeValue!=actualValue)
+                    {
+                        this.updateTimesWidget();
+                        lastTimeValue=actualValue;
+                    }			
+                }catch(e)
+                {
+                }
             }
         }
 	}
@@ -396,9 +460,8 @@ export class WatchdripV3 {
             const [fs_stat3, err3] = hmFS.stat(file_name, {
                 appid: appIdService
             })
-            if (err3 == 0) {
-                if (fs_stat3.mtime != this.lastInfoUpdate) {
-                    this.lastInfoUpdate = fs_stat3.mtime;
+            if (err3 === 0) {
+                if (fs_stat3.mtime !== this.lastInfoUpdate) {
                     let info = "";
                     let end=false;
             
@@ -414,7 +477,7 @@ export class WatchdripV3 {
                             hmFS.read(fh, array_buffer, 0, len);
                             info+=ab2str(array_buffer);
                             var bufView = new Uint8Array(array_buffer)
-                            if(bufView[511]==0)
+                            if(bufView[511]===0)
                             {
                                 end=true;
                             }
@@ -425,7 +488,7 @@ export class WatchdripV3 {
                     }
                     info=info.replace(/\0/g, '');
 
-                    if(info!==null && info!=undefined)
+                    if(info!==null && info!=undefined && info.length>0)
                     {
                         if (info) {
                             let data = {};
@@ -434,16 +497,21 @@ export class WatchdripV3 {
                                 this.watchdripData.setData(data); 
                                 this.watchdripData.timeDiff = 0;
                                 this.nextUpdateTime=this.watchdripData.getBg().time+65000;
+                                this.lastInfoUpdate = fs_stat3.mtime;
                                 info = null;
                             } catch (e) {
                                 info = null;
                                 return false;
                             }
                             data = null;
-                            return true
+                            return true;
                         }
                     }
                 }
+            }
+            else
+            {
+                return false;
             }
         }
         else

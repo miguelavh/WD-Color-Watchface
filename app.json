@@ -6,7 +6,7 @@
     "appType": "watchface",
     "version": {
       "code": 1,
-      "name": "2.0.0"
+      "name": "2.0.1"
     },
     "vender": "nimrod100",
     "description": "Color WD",
