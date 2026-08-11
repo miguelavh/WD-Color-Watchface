@@ -56,6 +56,9 @@ export class WatchdripV3 {
         this.refreshGraph=true;  
 
         this.graph = null;
+
+        this.serviceStartedCache = null;
+        this.serviceStartedCacheTime = 0;
     }
 
     //call before any usage of the class instance
@@ -88,6 +91,7 @@ export class WatchdripV3 {
         } else {
             hmUI.createWidget(hmUI.widget.WIDGET_DELEGATE, {
                 resume_call: () => {
+                    this.serviceStartedCacheTime = 0;                    
 					if(this.readValueInfo())
 					{
                         let actualValue=this.watchdripData.getTimeAgo(this.watchdripData.getBg().time);
@@ -253,8 +257,15 @@ export class WatchdripV3 {
     }
 
     isServiceStarted() {
+        const SERVICE_STATUS_CACHE_MS = 30000;
+        if (this.serviceStartedCache !== null &&
+            (this.timeSensor.utc - this.serviceStartedCacheTime) < SERVICE_STATUS_CACHE_MS) {
+            return this.serviceStartedCache;
+        }
+
         const file_name_running = "serviceStarted.status";
         const file_name= "info.json"
+        let result = false;
         try {
 
             const [fs_stat, err] = hmFS.stat(file_name_running, {
@@ -265,15 +276,16 @@ export class WatchdripV3 {
                     appid: appIdService
                 })
                 if (err2 == 0) {
-                    return true;
+                    result = true;
                 }
             }
-            else
-                return false;
         } catch (error) {
-            return false;
+            result = false;
         }
-        return false;
+
+        this.serviceStartedCache = result;
+        this.serviceStartedCacheTime = this.timeSensor.utc;
+        return result;
     }
 
     resetLastUpdate() {
