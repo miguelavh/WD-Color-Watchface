@@ -92,9 +92,10 @@ const EDIT_TYPES = [
     10003, //hmUI.data_type.HEART,
     10004, //hmUI.data_type.PAI_WEEKLY,
     10005, //hmUI.data_type.BATTERY
-	10006  //Phone Battery
+	10006,  //Phone Battery
+	10007,  //TIR
 ];
-const DEFAULTS_ORDER = [0, 1, 5, 4];
+const DEFAULTS_ORDER = [0, 6, 5, 4];
 
 const I_DIR = IMG+'icons/';
 const IL_DIR = IMG+'icons_l/';
@@ -104,10 +105,13 @@ const EDITS = [
     ['heart.png', 0xf82010],
     ['pai.png', 0x5252ff],
     ['battery.png', 0x02fa7a],
-	['phoneBattery.png',0x528eff]
+	['phoneBattery.png',0x528eff],
+	['tir.png',0x03a922]
 ];
 const phoneBatteryWidgets=[];
 const phoneBatteryArcs=[];
+const tirWidgets=[];
+const tirArcs=[];
 
 //NUEVO
 const I_SIZE = 25;
@@ -125,7 +129,7 @@ const EDIT_GROUP_PROP = {
 const C_SIZE = 50;
 //NUEVO
 const C1_DEFAULT = 10003;//hmUI.data_type.HEART;
-const C2_DEFAULT = 10007;//hmUI.data_type.WEATHER;
+const C2_DEFAULT = 10008;//hmUI.data_type.WEATHER;
 //NUEVO
 
 const C_POS = [DH-C_SIZE+20, PROGRESS_TH+25];
@@ -239,7 +243,7 @@ WatchFace({
 			let c_opt_types = [
 				...opt_types,
 				{
-					type: 10007,//hmUI.data_type.WEATHER,
+					type: 10008,//hmUI.data_type.WEATHER,
 					preview: IL_DIR+'weather.png'
 				}
 			];
@@ -364,7 +368,7 @@ WatchFace({
 					case 10005: data_type= hmUI.data_type.BATTERY;break;
 					default: data_type=hmUI.data_type.HEART;
 				}
-				if(EDIT_TYPES[typei]!==10006)
+				if(EDIT_TYPES[typei]<10006)
 				{
 					widget=hmUI.createWidget(hmUI.widget.ARC_PROGRESS, { // progress
 						...props,
@@ -387,7 +391,7 @@ WatchFace({
 						show_level: hmUI.show_level.ONLY_NORMAL
 					});
 				}
-				else
+				else if(EDIT_TYPES[typei]==10006) //phoneBattery
 				{
 					widget=hmUI.createWidget(hmUI.widget.ARC_PROGRESS, { // progress
 						...props,
@@ -409,6 +413,29 @@ WatchFace({
 						show_level: hmUI.show_level.ONLY_NORMAL
 					});
 					phoneBatteryWidgets.push(widget);
+				}
+				else if(EDIT_TYPES[typei]==10007) //TIR
+				{
+					widget=hmUI.createWidget(hmUI.widget.ARC_PROGRESS, { // progress
+						...props,
+						line_width: PROGRESS_TH,
+						color: EDITS[typei][1],
+						level: 0,
+					});
+					tirArcs.push(widget);
+				
+					widget=hmUI.createWidget(hmUI.widget.TEXT_IMG, { // text
+						x: [I_SPACE_H, DW-S_WIDTH-I_SPACE_H][i % 2],
+						y: [DW/4+2*I_SPACE_V+I_SIZE, DH-DW/4-2*I_SPACE_V-I_SIZE-S_HEIGHT][Math.floor(i/2) % 2],
+						w: S_WIDTH,
+						h: I_SIZE,
+						font_array: statNums,
+						h_space: 2,
+						align_h: [hmUI.align.LEFT, hmUI.align.RIGHT][i % 2],
+						invalid_image: statInvalid,
+						show_level: hmUI.show_level.ONLY_NORMAL
+					});
+					tirWidgets.push(widget);
 				}
 				//NUEVO
 			}
@@ -435,7 +462,7 @@ WatchFace({
 					case 10005: data_type= hmUI.data_type.BATTERY;break;
 					default: data_type=hmUI.data_type.HEART;
 				}
-				if(cType!==10006)
+				if(cType<10006)
 				{
 					widget=hmUI.createWidget(hmUI.widget.TEXT_IMG, {
 						x: DW/2+10,
@@ -456,7 +483,7 @@ WatchFace({
 						type: data_type
 					});
 				}
-				else
+				else if(cType==10006) //phoneBattery
 				{
 					widget=hmUI.createWidget(hmUI.widget.TEXT_IMG, {
 						x: DW/2+10,
@@ -468,6 +495,19 @@ WatchFace({
 						show_level: hmUI.show_level.ONLY_NORMAL
 					});
 					phoneBatteryWidgets.push(widget);
+				}
+				else if(cType==10007) //TIR
+				{
+					widget=hmUI.createWidget(hmUI.widget.TEXT_IMG, {
+						x: DW/2+10,
+						y: current_y+5,
+						w: DW/2,
+						align_h: hmUI.align.LEFT,
+						h_space: 2,
+						font_array: wNums,
+						show_level: hmUI.show_level.ONLY_NORMAL
+					});
+					tirWidgets.push(widget);
 				}
 				//NUEVO
 			}
@@ -533,7 +573,7 @@ WatchFace({
 					}).addEventListener(hmUI.event.CLICK_UP, function (info) {
 						hmApp.startApp({ url: 'pai_app_Screen', native: true });
 					});
-				} else if (tipo !== 10006) {
+				} else if (tipo < 10006) {
 
 					let data_type=hmUI.data_type.STEP;
 					switch(tipo)
@@ -562,7 +602,7 @@ WatchFace({
 			];
 			for (let i in cTypes) {
 				//NUEVO
-				if (cTypes[i] === 10007){//hmUI.data_type.WEATHER) {
+				if (cTypes[i] === 10008){//hmUI.data_type.WEATHER) {
 				//NUEVO
 					makeWeather(C_POS[i]);
 				} else {
@@ -669,6 +709,19 @@ WatchFace({
 			while(i<phoneBatteryArcs.length)
 			{
 				phoneBatteryArcs[i++].setProperty(hmUI.prop.LEVEL, watchdripData.getStatus().bat);
+			}
+			if(bgObj.tir!=null && bgObj.tir!=undefined)
+			{
+				i=0;
+				while(i<tirWidgets.length)
+				{
+					tirWidgets[i++].setProperty(hmUI.prop.TEXT, bgObj.tir);
+				}
+				i=0;
+				while(i<tirArcs.length)
+				{
+					tirArcs[i++].setProperty(hmUI.prop.LEVEL, parseInt(bgObj.tir, 10));
+				}			
 			}
 			//NUEVO
 
