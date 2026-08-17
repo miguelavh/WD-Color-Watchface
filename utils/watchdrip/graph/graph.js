@@ -132,11 +132,24 @@ export class Graph {
     }
 
     clear() {
-        this.widgets.forEach(widget => {
-            hmUI.deleteWidget(widget);
-        });
-
+        if (!Array.isArray(this.widgets)) {
+            return;
+        }
+        
+        while (this.widgets.length > 0) {
+            const widget = this.widgets.pop();
+            
+            if (widget) {
+                try {
+                    hmUI.deleteWidget(widget);
+                } catch (error) {
+                    console.error('Error deleting widget:', error);
+                }
+            }
+        }
+        
+        // Asegurar que no queden referencias
+        this.widgets = null;
         this.widgets = [];
-        //debug.log("Graph clear");
     }
 }
